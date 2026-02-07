@@ -1,33 +1,35 @@
 """
-Laser Time-of-Flight depth sensing module (VL53L1X).
+Laser Time-of-Flight depth sensing module.
 
-Provides high-precision local depth measurements for road surface
-assessment. Designed for limited-area sensing directly below
-and near the vehicle.
+Represents a multi-sensor laser array mounted near the
+front/bottom of the vehicle. The laser provides high-precision
+depth measurements but only for a limited local area directly
+below and near the vehicle.
 """
 
-def read_laser_depth(mode="mock"):
+def get_depth_data(mode="mock"):
     """
-    Read depth data from the laser sensor.
+    Retrieve depth data from the laser sensor array.
 
     Args:
         mode: "mock" for development, "real" for hardware integration
 
     Returns:
-        Dictionary containing depth information and sensor confidence
+        Dictionary containing depth values from multiple sensors
+        and overall confidence.
     """
 
     if mode == "mock":
         return {
-            "depth_mm": 18,          # Local depth variation
-            "confidence": 0.9,       # High precision
-            "scan_area": "local",    # Limited spatial coverage
-            "sensor": "VL53L1X"
+            # Depth readings from multiple laser sensors (in mm)
+            "depth_values": [18, 22, 21, 19, 20],
+            "confidence": 0.9,
+            "coverage": "local"  # Indicates limited sensing area
         }
 
     elif mode == "real":
-        # TODO: Integrate VL53L1X hardware reading here
-        # Example: I2C-based sensor read
+        # TODO: Integrate VL53L1X (or similar) laser array via I2C/UART
+        # Each sensor should report an independent depth reading
         raise NotImplementedError(
-            "VL53L1X hardware integration pending prototype phase"
+            "Laser hardware integration pending prototype phase"
         )
