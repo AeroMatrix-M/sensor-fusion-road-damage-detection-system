@@ -31,7 +31,7 @@ This extension is intentionally constrained and rule-based to ensure safety, fea
 
 ## Scope & Limitations
 This repository demonstrates system logic and architectural feasibility.
-Hardware integration, regulatory approvals, and large-scale field deployment are outside the current scope.
+Regulatory approvals are outside the current scope.
 
 ## References
 - YOLO-based road damage detection and segmentation adapted from public research and Kaggle implementations.
