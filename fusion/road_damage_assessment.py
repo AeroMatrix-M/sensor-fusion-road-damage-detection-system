@@ -3,43 +3,55 @@ Sensor fusion and road damage assessment module.
 
 Vision provides wide-area detection of road defects.
 Laser depth sensing provides high-precision local validation
-and detection of fine-grained surface damage within a limited area.
+and detection of fine-grained surface damage.
 """
+
+def classify_severity(depth_mm):
+    """
+    Classify pothole severity based on depth.
+
+    Returns:
+        'low', 'moderate', or 'severe'
+    """
+    if depth_mm < 10:
+        return "low"
+    elif depth_mm < 25:
+        return "moderate"
+    else:
+        return "severe"
+
 
 def assess_road_damage(vision_detections, depth_data):
     """
-    Fuse vision-based detections with laser depth sensing.
-
-    Args:
-        vision_detections: List of detections from image-based module
-        depth_data: Local laser depth readings
-
-    Returns:
-        List of fused road damage assessments
+    Fuse vision-based detections with laser depth sensing
+    and assign severity levels for mapping.
     """
 
+    if not depth_data:
+        return None
+
+    severity_level = classify_severity(depth_data["depth_mm"])
     fused_results = []
 
-    # Case 1: Vision detection validated and refined by laser
-    if vision_detections and depth_data:
+    # Vision + laser validated damage
+    if vision_detections:
         for d in vision_detections:
             fused_results.append({
                 "type": d["type"],
-                "confidence": d["confidence"],
                 "depth_mm": depth_data["depth_mm"],
+                "severity": severity_level,
+                "confidence": d["confidence"],
                 "source": "vision+laser"
             })
 
-    # Case 2: Laser-only local detection (micro-damage)
-    elif depth_data and depth_data["depth_mm"] > 0:
+    # Laser-only local micro-damage
+    else:
         fused_results.append({
             "type": "micro-damage",
-            "confidence": depth_data.get("confidence", 0.8),
             "depth_mm": depth_data["depth_mm"],
+            "severity": severity_level,
+            "confidence": depth_data.get("confidence", 0.8),
             "source": "laser-only"
         })
-
-    if not fused_results:
-        return None
 
     return fused_results
