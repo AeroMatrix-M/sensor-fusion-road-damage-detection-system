@@ -2,7 +2,8 @@
 Edge pipeline for road damage detection system.
 
 This module orchestrates:
-- Vision-based detection
+- Vision-based detection (YOLO)
+- Perception-level verification (verified vs unverified)
 - Laser depth measurement
 - Sensor fusion & severity assessment
 - GPS geo-tagging
@@ -11,6 +12,7 @@ Outputs map-ready road damage data.
 """
 
 from perception.image_detection import detect_road_damage
+from perception.detection_verification import verify_detections
 from depth.laser_depth_reader import get_depth_data
 from fusion.road_damage_assessment import assess_road_damage
 from gps.geo_tagging import get_gps_location
@@ -21,32 +23,42 @@ def run_edge_pipeline():
     Execute one full detection cycle on the edge device.
     """
 
-    # Step 1: Vision-based detection (wide view)
+    # Step 1: Vision-based detection (wide view via YOLO)
     vision_detections = detect_road_damage()
 
     # Step 2: Laser depth sensing (local precision)
     depth_data = get_depth_data()
 
-    # Step 3: Sensor fusion & severity assessment
+    # Determine whether laser coverage is available
+    laser_available = bool(depth_data and "depth_values" in depth_data)
+
+    # Step 3: Perception-level verification (blue dot logic)
+    vision_detections = verify_detections(
+        vision_detections,
+        laser_coverage=laser_available
+    )
+
+    # Step 4: Sensor fusion & severity assessment
     fused_results = assess_road_damage(vision_detections, depth_data)
 
     if not fused_results:
         return None
 
-    # Step 4: GPS geo-tagging
+    # Step 5: GPS geo-tagging
     gps_data = get_gps_location()
 
-    # Step 5: Prepare map-ready output
+    # Step 6: Prepare map-ready output
     map_ready_outputs = []
     for result in fused_results:
         map_ready_outputs.append({
             "latitude": gps_data["latitude"],
             "longitude": gps_data["longitude"],
-            "damage_type": result["type"],
-            "depth_mm": result["depth_mm"],
-            "severity": result["severity"],
-            "confidence": result["confidence"],
-            "source": result["source"]
+            "damage_type": result.get("type"),
+            "depth_mm": result.get("depth_mm"),
+            "severity": result.get("severity", "unknown"),
+            "verification": result.get("verification", "unverified"),
+            "confidence": result.get("confidence", 0.0),
+            "source": result.get("source", "unknown")
         })
 
     return map_ready_outputs
