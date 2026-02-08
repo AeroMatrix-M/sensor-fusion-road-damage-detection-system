@@ -86,7 +86,8 @@ def assess_road_damage(vision_detections, depth_data):
                 "depth_mm": max_depth,
                 "severity": severity_level,
                 "confidence": d["confidence"],
-                "source": "vision+laser"
+                "verification": d.get("verification", "verified"),
+                "source": d.get("source", "vision+laser")
             })
 
     # Case 3: Laser-only localized micro-damage
